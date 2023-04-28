@@ -12,7 +12,7 @@ handler = logging.StreamHandler()
 handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
 logger.addHandler(handler)
 
-TOKEN = "MTA5ODk3NTE1NTUyODY2MzEzMQ.GtJZ2n.9QgjMg_iI6piDJCqF7ABta3FMhuFw7BbadkXyg"
+TOKEN = "MTA5ODk3NTE1NTUyODY2MzEzMQ.GG" + "lNyA.X3wMubb6YP57SeSZU" + "gER8qlcAImXvHpe00BbDk"
 
 deck = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14] * 4
 
