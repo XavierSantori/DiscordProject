@@ -12,19 +12,13 @@ handler = logging.StreamHandler()
 handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
 logger.addHandler(handler)
 
-TOKEN = "MTA5ODk3NTE1NTUyODY2MzEzMQ.GCLRne.OFhHNBZyY4Lb7wK9G5qs76VeFq_z7v2o880mZ0" 
-
-
-
-
-
-
-
+TOKEN = "MTA5ODk3NTE1NTUyODY2MzEzMQ.GtJZ2n.9QgjMg_iI6piDJCqF7ABta3FMhuFw7BbadkXyg"
 
 deck = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14] * 4
 
 
 def deal(deck):
+    global player_hand, dealer_hand
     hand = []
     for i in range(2):
         random.shuffle(deck)
@@ -75,76 +69,75 @@ def clear():
 
 def print_results(dealer_hand, player_hand):
     clear()
-    return "The dealer has a " + str(dealer_hand) + " for a total of " + str(total(dealer_hand)), "\n",  "You have a " + str(player_hand) + " for a total of " + str(total(player_hand))
+    return "The dealer has a " + str(dealer_hand) + " for a total of " + str(
+        total(dealer_hand)), "You have a " + str(player_hand) + " for a total of " + str(total(player_hand))
 
 
 def print_pre_results(dealer_hand, player_hand):
     clear()
-    return "The dealer has a " + str(dealer_hand[0]), "\n",  "You have a " + str(player_hand) + " for a total of " + str(total(player_hand))
+    return "The dealer has a " + str(dealer_hand[0]), "You have a " + str(player_hand) + " for a total of " + str(
+        total(player_hand))
 
 
 def blackjack(dealer_hand, player_hand):
     if total(player_hand) == 21:
-        return print_results(dealer_hand, player_hand), "Congratulations! You got a Blackjack!\n"
+        return print_results(dealer_hand, player_hand), "Congratulations! You got a Blackjack!"
     elif total(dealer_hand) == 21:
-        return print_results(dealer_hand, player_hand), "Sorry, you lose. The dealer got a blackjack.\n"
+        return print_results(dealer_hand, player_hand), "Sorry, you lose. The dealer got a blackjack."
 
 
 def score(dealer_hand, player_hand):
     if total(player_hand) == 21:
-        print_results(dealer_hand, player_hand)
-        print("Congratulations! You got a Blackjack!\n")
+
+        return print_results(dealer_hand, player_hand), "Congratulations! You got a Blackjack!"
     elif total(dealer_hand) == 21:
-        print_results(dealer_hand, player_hand)
-        print("Sorry, you lose. The dealer got a blackjack.\n")
+
+        return print_results(dealer_hand, player_hand), "Sorry, you lose. The dealer got a blackjack."
     elif total(player_hand) > 21:
-        print_results(dealer_hand, player_hand)
-        print("Sorry. You busted. You lose.\n")
+
+        return print_results(dealer_hand, player_hand), "Sorry. You busted. You lose."
     elif total(dealer_hand) > 21:
-        print_results(dealer_hand, player_hand)
-        print("Dealer busts. You win!\n")
+
+        return print_results(dealer_hand, player_hand), "Dealer busts. You win!"
     elif total(player_hand) < total(dealer_hand):
-        print_results(dealer_hand, player_hand)
-        print("Sorry. Your score isn't higher than the dealer. You lose.\n")
+
+        return print_results(dealer_hand, player_hand), "Sorry. Your score isn't higher than the dealer. You lose."
     elif total(player_hand) > total(dealer_hand):
-        print_results(dealer_hand, player_hand)
-        print("Congratulations. Your score is higher than the dealer. You win\n")
+
+        return print_results(dealer_hand, player_hand), "Congratulations. Your score is higher than the dealer. You win"
     elif total(player_hand) == total(dealer_hand):
-        print_results(dealer_hand, player_hand)
-        print("Tie!\n")
+
+        return print_results(dealer_hand, player_hand), "Tie!"
 
 
 def game_init():
+    global player_hand, dealer_hand
     deck = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14] * 4
-    choice = 0
     clear()
     dealer_hand = deal(deck)
     player_hand = deal(deck)
-    print("The dealer is showing a " + str(dealer_hand[0]))
-    print("You have a " + str(player_hand) + " for a total of " + str(total(player_hand)))
+    print()
+    print()
     blackjack(dealer_hand, player_hand)
-    return "Do you want to [H]it, [S]tand, or [Q]uit: "
+    return "The dealer is showing a " + str(dealer_hand[0]), "You have a " + str(player_hand) + " for a total of " + str(total(player_hand)), "Do you want to [H]it, [S]tand, or [Q]uit: "
 
 
 def act_hit():
+    global stage
     hit(player_hand)
     if total(player_hand) > 21:
+        stage = 1
         return score(dealer_hand, player_hand)
     else:
         return print_pre_results(dealer_hand, player_hand)
 
 
-
 def act_stand():
+    global stage
     while total(dealer_hand) < 17:
         hit(dealer_hand)
-        return score(dealer_hand, player_hand)
-        
-
-
-
-
-
+    stage = 1
+    return score(dealer_hand, player_hand)
 
 
 class YLBotClient(discord.Client):
@@ -164,15 +157,15 @@ class YLBotClient(discord.Client):
         if message.author == self.user:
             return
         if stage == 1:
-            if "!bj" in message.content.lover:
-                await message.channel.send(game_init)
+            if "!bj" in message.content.lower():
+                await message.channel.send(game_init())
                 stage = 2
-        if stage == 2: 
-            if "!hit" in message.content.lover:
+        if stage == 2:
+            if "!hit" in message.content.lower():
                 await message.channel.send(act_hit())
-            if "!stand" in message.content.lover:
+            if "!stand" in message.content.lower():
                 await message.channel.send(act_stand())
-            if "!quit" in message.content.lover:
+            if "!quit" in message.content.lower():
                 stage = 1
                 return
 
