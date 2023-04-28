@@ -1,0 +1,184 @@
+import discord
+import logging
+import os
+import random
+
+stage = 1
+player_hand = []
+dealer_hand = []
+logger = logging.getLogger('discord')
+logger.setLevel(logging.DEBUG)
+handler = logging.StreamHandler()
+handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+logger.addHandler(handler)
+
+TOKEN = "MTA5ODk3NTE1NTUyODY2MzEzMQ.GCLRne.OFhHNBZyY4Lb7wK9G5qs76VeFq_z7v2o880mZ0" 
+
+
+
+
+
+
+
+
+deck = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14] * 4
+
+
+def deal(deck):
+    hand = []
+    for i in range(2):
+        random.shuffle(deck)
+        card = deck.pop()
+        if card == 11: card = "J"
+        if card == 12: card = "Q"
+        if card == 13: card = "K"
+        if card == 14: card = "A"
+        hand.append(card)
+    return hand
+
+
+def play_again():
+    exit()
+
+
+def total(hand):
+    total = 0
+    for card in hand:
+        if card == "J" or card == "Q" or card == "K":
+            total += 10
+        elif card == "A":
+            if total >= 11:
+                total += 1
+            else:
+                total += 11
+        else:
+            total += card
+    return total
+
+
+def hit(hand):
+    card = deck.pop()
+    if card == 11: card = "J"
+    if card == 12: card = "Q"
+    if card == 13: card = "K"
+    if card == 14: card = "A"
+    hand.append(card)
+    return hand
+
+
+def clear():
+    if os.name == 'nt':
+        os.system('CLS')
+    if os.name == 'posix':
+        os.system('clear')
+
+
+def print_results(dealer_hand, player_hand):
+    clear()
+    return "The dealer has a " + str(dealer_hand) + " for a total of " + str(total(dealer_hand)), "\n",  "You have a " + str(player_hand) + " for a total of " + str(total(player_hand))
+
+
+def print_pre_results(dealer_hand, player_hand):
+    clear()
+    return "The dealer has a " + str(dealer_hand[0]), "\n",  "You have a " + str(player_hand) + " for a total of " + str(total(player_hand))
+
+
+def blackjack(dealer_hand, player_hand):
+    if total(player_hand) == 21:
+        return print_results(dealer_hand, player_hand), "Congratulations! You got a Blackjack!\n"
+    elif total(dealer_hand) == 21:
+        return print_results(dealer_hand, player_hand), "Sorry, you lose. The dealer got a blackjack.\n"
+
+
+def score(dealer_hand, player_hand):
+    if total(player_hand) == 21:
+        print_results(dealer_hand, player_hand)
+        print("Congratulations! You got a Blackjack!\n")
+    elif total(dealer_hand) == 21:
+        print_results(dealer_hand, player_hand)
+        print("Sorry, you lose. The dealer got a blackjack.\n")
+    elif total(player_hand) > 21:
+        print_results(dealer_hand, player_hand)
+        print("Sorry. You busted. You lose.\n")
+    elif total(dealer_hand) > 21:
+        print_results(dealer_hand, player_hand)
+        print("Dealer busts. You win!\n")
+    elif total(player_hand) < total(dealer_hand):
+        print_results(dealer_hand, player_hand)
+        print("Sorry. Your score isn't higher than the dealer. You lose.\n")
+    elif total(player_hand) > total(dealer_hand):
+        print_results(dealer_hand, player_hand)
+        print("Congratulations. Your score is higher than the dealer. You win\n")
+    elif total(player_hand) == total(dealer_hand):
+        print_results(dealer_hand, player_hand)
+        print("Tie!\n")
+
+
+def game_init():
+    deck = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14] * 4
+    choice = 0
+    clear()
+    dealer_hand = deal(deck)
+    player_hand = deal(deck)
+    print("The dealer is showing a " + str(dealer_hand[0]))
+    print("You have a " + str(player_hand) + " for a total of " + str(total(player_hand)))
+    blackjack(dealer_hand, player_hand)
+    return "Do you want to [H]it, [S]tand, or [Q]uit: "
+
+
+def act_hit():
+    hit(player_hand)
+    if total(player_hand) > 21:
+        return score(dealer_hand, player_hand)
+    else:
+        return print_pre_results(dealer_hand, player_hand)
+
+
+
+def act_stand():
+    while total(dealer_hand) < 17:
+        hit(dealer_hand)
+        return score(dealer_hand, player_hand)
+        
+
+
+
+
+
+
+
+class YLBotClient(discord.Client):
+    async def on_ready(self):
+        logger.info(f'{self.user} has connected to Discord!')
+        for guild in self.guilds:
+            logger.info(
+                f'{self.user} подключились к чату:\n'
+                f'{guild.name}(id: {guild.id})')
+
+    async def on_member_join(self, member):
+        await member.create_dm()
+        await member.dm_channel.send(f'Привет, {member.name}!')
+
+    async def on_message(self, message):
+        global stage
+        if message.author == self.user:
+            return
+        if stage == 1:
+            if "!bj" in message.content.lover:
+                await message.channel.send(game_init)
+                stage = 2
+        if stage == 2: 
+            if "!hit" in message.content.lover:
+                await message.channel.send(act_hit())
+            if "!stand" in message.content.lover:
+                await message.channel.send(act_stand())
+            if "!quit" in message.content.lover:
+                stage = 1
+                return
+
+
+intents = discord.Intents.default()
+intents.members = True
+intents.message_content = True
+client = YLBotClient(intents=intents)
+client.run(TOKEN)
